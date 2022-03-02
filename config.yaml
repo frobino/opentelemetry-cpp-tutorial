@@ -1,0 +1,24 @@
+receivers:   
+  jaeger:
+    protocols:
+      grpc:
+      thrift_compact:
+
+exporters:
+  logzio:
+    account_token: #<TYPE_YOUR_TOKEN_HERE>
+    region: #<TYPE_YOUR_REGION_HERE>
+
+processors:
+  batch:
+
+extensions:  
+  health_check:
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [jaeger]
+      processors: [batch]
+      exporters: [logzio]
