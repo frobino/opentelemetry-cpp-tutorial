@@ -9,7 +9,7 @@ using namespace opentelemetry::exporter::jaeger;
 void setUpTracer(bool inCompose)
 {    
     JaegerExporterOptions options;
-    options.server_addr = inCompose ? "jaeger" : "localhost";    
+    // options.server_addr = inCompose ? "jaeger" : "localhost";    
 
     // Create Jaeger exporter instance
     auto exporter = std::unique_ptr<sdktrace::SpanExporter>(

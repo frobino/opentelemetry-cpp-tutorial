@@ -1,0 +1,9 @@
+[requires]
+opentracing-cpp/1.6.0
+pistache/cci.20201127
+thrift/0.14.2
+abseil/20210324.2
+libcurl/7.79.1
+
+[generators]
+cmake

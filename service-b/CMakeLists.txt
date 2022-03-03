@@ -1,38 +1,95 @@
 cmake_minimum_required(VERSION 3.6)
 
-# Hunter is used to get thrift (a package required by jaeger-exporter)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(HunterGate)
+# Create a few variables, used to make this file modular
+set(PROJECT_NAME serviceB)
 
-option(HUNTER_BUILD_SHARED_LIBS "Build Shared Library" ON)
-
-HunterGate(
-   URL "https://github.com/cpp-pm/hunter/archive/v0.23.249.tar.gz"
-   SHA1 "d45d77d8bba9da13e9290a180e0477e90accd89b"
-   LOCAL # load `${CMAKE_CURRENT_LIST_DIR}/cmake/Hunter/config.cmake`
-)
-
-# Project name and version
-project(serviceB VERSION 1.0)
-
-# Get thrift
-hunter_add_package(thrift)
-find_package(thrift CONFIG REQUIRED)
+# Name of the project (which will be the 1st default target)
+project(${PROJECT_NAME} VERSION 1.0)
 
 # Pistache requires C++ 17
 set(CMAKE_CXX_STANDARD 17)
 
+# conan setup
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
 # Executable
 add_executable(${PROJECT_NAME} main.cpp)
 
+add_library(opentelemetry_exporter_jaeger_trace STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_exporter_jaeger_trace PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_exporter_jaeger_trace.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_trace STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_trace PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_trace.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_common STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_common PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_common.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_proto STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_proto PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_proto.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_resources STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_resources PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_resources.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_otpl_recordable STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_otpl_recordable PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_otpl_recordable.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_exporter_otpl_http STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_exporter_otpl_http PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_exporter_otpl_http.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(http_client_curl STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(http_client_curl PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libhttp_client_curl.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+add_library(opentelemetry_exporter_otpl_grpc STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_exporter_otpl_grpc PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_exporter_otpl_grpc.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
+# add_library(thrift STATIC IMPORTED) # or STATIC instead of SHARED
+# set_target_properties(thrift PROPERTIES
+#   IMPORTED_LOCATION "/home/efroroo/.conan/data/thrift/0.14.2/_/_/package/ac26c0e48f3c75b4ba727df4349a3bdcf1cbcdf6/lib/libthrift.a"
+#   INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/thrift/0.14.2/_/_/package/ac26c0e48f3c75b4ba727df4349a3bdcf1cbcdf6/include/"
+# )
+
 # Subdirectories
-add_subdirectory("../common/opentelemetry-cpp" "${CMAKE_CURRENT_BINARY_DIR}/opentelemetry-cpp_build")
-add_subdirectory("../common/pistache" "${CMAKE_CURRENT_BINARY_DIR}/pistache_build")
+# add_subdirectory("../common/opentelemetry-cpp" "${CMAKE_CURRENT_BINARY_DIR}/opentelemetry-cpp_build")
+# add_subdirectory("../common/pistache" "${CMAKE_CURRENT_BINARY_DIR}/pistache_build")
 
 # Dependencies
-include_directories("../common/opentelemetry-cpp/exporters/jaeger/include")
-target_link_libraries(${PROJECT_NAME} PUBLIC 
-    opentelemetry_trace 
-    jaeger_trace_exporter        
-    pistache
-    thrift::thrift_static)
+# include_directories("../common/opentelemetry-cpp/exporters/jaeger/include")
+# target_link_libraries(${PROJECT_NAME} PUBLIC 
+#     opentelemetry_trace 
+#     jaeger_trace_exporter
+#     pistache
+#     thrift::thrift_static)
+
+# Link the executable and the library together
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS} opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_trace opentelemetry_common http_client_curl thrift)
+
+# Specify directories of header files needed to build.
+# target_include_directories(${PROJECT_NAME} PRIVATE ${MODULE1_H_DIR})
