@@ -22,6 +22,12 @@ set_target_properties(opentelemetry_exporter_jaeger_trace PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
 )
 
+add_library(opentelemetry_resources STATIC IMPORTED) # or STATIC instead of SHARED
+set_target_properties(opentelemetry_resources PROPERTIES
+  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_resources.a"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
+)
+
 add_library(opentelemetry_trace STATIC IMPORTED) # or STATIC instead of SHARED
 set_target_properties(opentelemetry_trace PROPERTIES
   IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_trace.a"
@@ -34,47 +40,11 @@ set_target_properties(opentelemetry_common PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
 )
 
-add_library(opentelemetry_proto STATIC IMPORTED) # or STATIC instead of SHARED
-set_target_properties(opentelemetry_proto PROPERTIES
-  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_proto.a"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
-)
-
-add_library(opentelemetry_resources STATIC IMPORTED) # or STATIC instead of SHARED
-set_target_properties(opentelemetry_resources PROPERTIES
-  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_resources.a"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
-)
-
-add_library(opentelemetry_otpl_recordable STATIC IMPORTED) # or STATIC instead of SHARED
-set_target_properties(opentelemetry_otpl_recordable PROPERTIES
-  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_otpl_recordable.a"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
-)
-
-add_library(opentelemetry_exporter_otpl_http STATIC IMPORTED) # or STATIC instead of SHARED
-set_target_properties(opentelemetry_exporter_otpl_http PROPERTIES
-  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_exporter_otpl_http.a"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
-)
-
 add_library(http_client_curl STATIC IMPORTED) # or STATIC instead of SHARED
 set_target_properties(http_client_curl PROPERTIES
   IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libhttp_client_curl.a"
   INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
 )
-
-add_library(opentelemetry_exporter_otpl_grpc STATIC IMPORTED) # or STATIC instead of SHARED
-set_target_properties(opentelemetry_exporter_otpl_grpc PROPERTIES
-  IMPORTED_LOCATION "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/lib/libopentelemetry_exporter_otpl_grpc.a"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/opentelemetry-cpp/1.0.1/_/_/package/864fac862bdafe48e6890da6667fded3c4d61821/include/"
-)
-
-# add_library(thrift STATIC IMPORTED) # or STATIC instead of SHARED
-# set_target_properties(thrift PROPERTIES
-#   IMPORTED_LOCATION "/home/efroroo/.conan/data/thrift/0.14.2/_/_/package/ac26c0e48f3c75b4ba727df4349a3bdcf1cbcdf6/lib/libthrift.a"
-#   INTERFACE_INCLUDE_DIRECTORIES "/home/efroroo/.conan/data/thrift/0.14.2/_/_/package/ac26c0e48f3c75b4ba727df4349a3bdcf1cbcdf6/include/"
-# )
 
 # Subdirectories
 # add_subdirectory("../common/opentelemetry-cpp" "${CMAKE_CURRENT_BINARY_DIR}/opentelemetry-cpp_build")
@@ -88,8 +58,6 @@ set_target_properties(opentelemetry_exporter_otpl_grpc PROPERTIES
 #     pistache
 #     thrift::thrift_static)
 
+# Dependencies:
 # Link the executable and the library together
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS} opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_trace opentelemetry_common http_client_curl thrift)
-
-# Specify directories of header files needed to build.
-# target_include_directories(${PROJECT_NAME} PRIVATE ${MODULE1_H_DIR})
+target_link_libraries(${PROJECT_NAME} opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_trace opentelemetry_common http_client_curl ${CONAN_LIBS})
