@@ -2,33 +2,35 @@
 #include <opentelemetry/sdk/trace/tracer_provider.h>
 #include <opentelemetry/trace/provider.h>
 #include <opentelemetry/exporters/jaeger/jaeger_exporter.h>
+#include <opentelemetry/sdk/version/version.h>
 
-namespace sdktrace = opentelemetry::sdk::trace;
-using namespace opentelemetry::exporter::jaeger;
+namespace nostd     = opentelemetry::nostd;
+namespace trace_sdk = opentelemetry::sdk::trace;
+namespace jaeger    = opentelemetry::exporter::jaeger;
+
+opentelemetry::exporter::jaeger::JaegerExporterOptions opts;
 
 void setUpTracer(bool inCompose)
 {    
-    JaegerExporterOptions options;
-    // options.server_addr = inCompose ? "jaeger" : "localhost";    
+    // opts.server_addr = inCompose ? "jaeger" : "localhost";    
 
     // Create Jaeger exporter instance
-    auto exporter = std::unique_ptr<sdktrace::SpanExporter>(
-        new opentelemetry::exporter::jaeger::JaegerExporter(options));
-    auto processor = std::unique_ptr<sdktrace::SpanProcessor>(
-        new sdktrace::SimpleSpanProcessor(std::move(exporter)));
-    auto provider = opentelemetry::nostd::shared_ptr<opentelemetry::trace::TracerProvider>(
-        new sdktrace::TracerProvider(std::move(processor)));
- 
-   // Set the global trace provider
-   opentelemetry::trace::Provider::SetTracerProvider(provider);    
+    auto exporter  = std::unique_ptr<trace_sdk::SpanExporter>(new jaeger::JaegerExporter(opts));
+    auto processor = std::unique_ptr<trace_sdk::SpanProcessor>(
+        new trace_sdk::SimpleSpanProcessor(std::move(exporter)));
+    auto provider =
+    nostd::shared_ptr<opentelemetry::trace::TracerProvider>(new trace_sdk::TracerProvider(std::move(processor)));
+    // Set the global trace provider
+    opentelemetry::trace::Provider::SetTracerProvider(provider);
 }
 
 opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer> getTracer(std::string serviceName)
 {   
-    auto provider = opentelemetry::trace::Provider::GetTracerProvider();
-    return provider->GetTracer(serviceName);
+  auto provider = opentelemetry::trace::Provider::GetTracerProvider();
+    return provider->GetTracer(serviceName, OPENTELEMETRY_SDK_VERSION);
 }
 
+// frobino: this should NOT be used
 void trace(std::string serviceName, std::string operationName)
 {
     auto span = getTracer(serviceName)->StartSpan(operationName);

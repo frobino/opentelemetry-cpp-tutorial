@@ -12,7 +12,7 @@ using namespace Rest;
 class Service
 {
   private:
-    Router router;    
+    Router router;
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     
     Address address;      
@@ -57,7 +57,7 @@ class Service
     {
       std::cout << "\n---=== " << serviceName << "===---\n";
 
-      trace(serviceName, serviceName + ": received ping");                 
+      trace(serviceName, serviceName + ": received ping");
       
       writer.send(Http::Code::Ok, "Hello from " + serviceName);
     }    

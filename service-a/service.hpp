@@ -23,7 +23,7 @@ class Service
     const std::string serviceName = "service-a";
 
     void setupRoutes()
-    {        
+    {
         Routes::Get(router, "/ping", Routes::bind(&Service::ping, this));        
     }
 
@@ -41,15 +41,18 @@ class Service
 
     void sendPingToAnotherService(std::string hostName, std::string svcName) 
     {
+      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan("sending ping to"));
       // auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": sending ping to: " + svcName));
+      
       // auto span = getTracer(serviceName)->StartSpan(serviceName + ": sending ping to: " + svcName);
       // span->SetAttribute("service.name", serviceName);
 
       auto resp = httpClient.get(hostName).send();
-      
+
+      std::cout << "Response from " << ": " << svcName << std::endl;
       resp.then(
         [&](Http::Response response) {
-          std::cout << "Response from " << svcName << ":\n";
+          // std::cout << "Response from " << ": " << svcName << std::endl;
           std::cout << "Code = " << response.code() << std::endl;
           auto body = response.body();
           if (!body.empty())
@@ -75,7 +78,7 @@ class Service
         setupRoutes();
         initHttpClient();
 
-        // true, for docker compose, false for local
+        // true for docker-compose, false for local
         // setUpTracer(true);
         setUpTracer(false);
 
@@ -90,8 +93,10 @@ class Service
     {
       std::cout << "\n---=== " << serviceName << "===---\n";
 
-      auto span = getTracer(serviceName)->StartSpan(serviceName + ": received ping");
-      span->SetAttribute("service.name", serviceName);
+      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan("ping"));
+      
+      // auto span = getTracer(serviceName)->StartSpan(serviceName + ": received ping");
+      // span->SetAttribute("service.name", serviceName);
 
       // trace(serviceName, serviceName + ": received ping");
       // trace(serviceName, "sending ping to service-b");
@@ -100,6 +105,6 @@ class Service
       
       writer.send(Http::Code::Ok, "Hello from " + serviceName);
 
-      span->End();
+      // span->End();
     }    
 };
