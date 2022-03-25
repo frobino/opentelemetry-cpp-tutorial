@@ -44,7 +44,7 @@ class Service
 
         // true for docker-compose, false for local
         // setUpTracer(true);
-        setUpTracer(false);
+        setUpTracer(false, serviceName);
 
         std::cout << "Listening at: " << address.host() << 
           ":" << address.port().toString() << std::endl;
