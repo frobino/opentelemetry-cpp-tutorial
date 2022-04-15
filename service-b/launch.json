@@ -1,0 +1,20 @@
+{
+  "configurations": [
+    {
+      "type": "lldb-vscode",
+      "request": "launch",
+      "name": "C++ LLDB json default",
+      "stopAtEntry": false,
+      "program": "${workspaceFolder}/build/bin/serviceB",
+      "cwd": "${workspaceFolder}",
+      "args": [],
+      "MIMode": "lldb",
+      "setupCommands": [
+        {
+        "text": "settings set target.process.thread.step-avoid-regexp \"\"",
+        "description": "Enable stepping into STL"
+        }
+      ]
+    }
+  ]
+}
