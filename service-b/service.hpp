@@ -57,7 +57,8 @@ class Service
     {
       std::cout << "\n---=== " << serviceName << "===---\n";
 
-      trace(serviceName, serviceName + ": received ping");
+      // trace(serviceName, serviceName + ": received ping");
+      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": received ping"));
       
       writer.send(Http::Code::Ok, "Hello from " + serviceName);
     }    
