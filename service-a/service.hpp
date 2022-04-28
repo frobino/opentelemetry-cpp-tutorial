@@ -5,11 +5,20 @@
 #include <pistache/net.h>
 
 #include "../common/tracer.hpp"
+
 #include "opentelemetry/trace/provider.h"
 #include "opentelemetry/trace/scope.h"
+#include "opentelemetry/trace/experimental_semantic_conventions.h"
+
+#include "opentelemetry/ext/http/client/http_client.h"
+#include "opentelemetry/ext/http/client/http_client_factory.h"
+#include "opentelemetry/ext/http/common/url_parser.h"
 
 using namespace Pistache;
 using namespace Rest;
+
+using namespace opentelemetry::trace;
+namespace http_client = opentelemetry::ext::http::client;
 
 class Service
 {
@@ -44,9 +53,17 @@ class Service
       auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan("sending ping to"));
       // auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": sending ping to: " + svcName));
       
-      // auto span = getTracer(serviceName)->StartSpan(serviceName + ": sending ping to: " + svcName);
-      // span->SetAttribute("service.name", serviceName);
+      // inject current context into http header
+      auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+      HttpTextMapCarrier<opentelemetry::ext::http::client::Headers> carrier;
+      auto prop = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+      prop->Inject(carrier, current_ctx);
+      // TODO: translate carrier.headers_ into Pistache headers?
+      // c.post(page).body(body).header<Http::Header::ContentType>(header).send();
+      // opentelemetry::ext::http::client::Headers h2 = carrier.headers_;
+      // auto resp = httpClient.get(hostName).header<opentelemetry::ext::http::client::Headers>(h2).send();
 
+      // ORIGINAL BELOW:
       auto resp = httpClient.get(hostName).send();
 
       std::cout << "Response from " << ": " << svcName << std::endl;
@@ -57,12 +74,41 @@ class Service
           auto body = response.body();
           if (!body.empty())
               std::cout << "Body = " << body << std::endl;
-        }, 
+        },
         [&](std::exception_ptr exc) {
           std::cout << "Error..." << std::endl;
       });
+    }
 
-      // span->End();
+    void sendPingToAnotherServiceProp2(std::string hostName, std::string svcName)
+    {
+
+      auto http_client = http_client::HttpClientFactory::CreateSync();
+      // start scoped active span
+      StartSpanOptions options;
+      options.kind = SpanKind::kClient;
+      opentelemetry::ext::http::common::UrlParser url_parser(hostName);
+
+      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan("sending ping to" + svcName, options));
+
+      // get global propagator
+      HttpTextMapCarrier<opentelemetry::ext::http::client::Headers> carrier;
+      auto prop = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+      // inject current context into http header
+      auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+      prop->Inject(carrier, current_ctx);
+
+      // send http request
+      http_client::Result result = http_client->Get(hostName, carrier.headers_);
+      if (result)
+      {
+	std::cout << "Response from " << ": " << svcName << std::endl;
+	auto status_code = result.GetResponse().GetStatusCode();
+	std::cout << "Code = " << status_code << std::endl;
+	auto resp_body = result.GetResponse().GetBody();
+	std::cout << "Body = " << resp_body.data() << std::endl;
+      }
+
     }
 
   public:
@@ -94,17 +140,10 @@ class Service
       std::cout << "\n---=== " << serviceName << "===---\n";
 
       auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan("ping"));
-      
-      // auto span = getTracer(serviceName)->StartSpan(serviceName + ": received ping");
-      // span->SetAttribute("service.name", serviceName);
-
-      // trace(serviceName, serviceName + ": received ping");
-      // trace(serviceName, "sending ping to service-b");
      
-      sendPingToAnotherService("http://0.0.0.0:8082/ping", "service-b");
+      // sendPingToAnotherService("http://0.0.0.0:8082/ping", "service-b");
+      sendPingToAnotherServiceProp2("http://0.0.0.0:8082/ping", "service-b");
       
       writer.send(Http::Code::Ok, "Hello from " + serviceName);
-
-      // span->End();
     }    
 };

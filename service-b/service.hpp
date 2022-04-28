@@ -9,6 +9,10 @@
 using namespace Pistache;
 using namespace Rest;
 
+using namespace opentelemetry::trace;
+namespace http_client = opentelemetry::ext::http::client;
+namespace context     = opentelemetry::context;
+
 class Service
 {
   private:
@@ -40,7 +44,7 @@ class Service
     void initAndStart()
     {
         initEndpoint();
-        setupRoutes();        
+        setupRoutes();
 
         // true for docker-compose, false for local
         // setUpTracer(true);
@@ -57,8 +61,19 @@ class Service
     {
       std::cout << "\n---=== " << serviceName << "===---\n";
 
+      StartSpanOptions options;
+      options.kind = SpanKind::kServer;
+      request.headers();
+
+      // extract context from http header
+      HttpTextMapCarrier<http_client::Headers> carrier;
+      auto prop        = context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+      auto current_ctx = context::RuntimeContext::GetCurrent();
+      auto new_context = prop->Extract(carrier, current_ctx);
+      options.parent   = GetSpan(new_context)->GetContext();
+
       // trace(serviceName, serviceName + ": received ping");
-      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": received ping"));
+      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": received ping", options));
       
       writer.send(Http::Code::Ok, "Hello from " + serviceName);
     }    

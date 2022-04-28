@@ -5,11 +5,53 @@
 #include <opentelemetry/exporters/jaeger/jaeger_exporter.h>
 #include <opentelemetry/sdk/version/version.h>
 
+// Includes for trace propagation
+#include <opentelemetry/context/propagation/global_propagator.h>
+#include <opentelemetry/context/propagation/text_map_propagator.h>
+#include <opentelemetry/trace/propagation/http_trace_context.h>
+
 namespace nostd     = opentelemetry::nostd;
 namespace trace_sdk = opentelemetry::sdk::trace;
 namespace jaeger    = opentelemetry::exporter::jaeger;
 
 opentelemetry::exporter::jaeger::JaegerExporterOptions opts;
+
+template <typename T>
+class HttpTextMapCarrier : public opentelemetry::context::propagation::TextMapCarrier
+{
+public:
+  HttpTextMapCarrier<T>(T &headers) : headers_(headers) {}
+  HttpTextMapCarrier() = default;
+  virtual opentelemetry::nostd::string_view Get(
+      opentelemetry::nostd::string_view key) const noexcept override
+  {
+    std::string key_to_compare = key.data();
+    // Header's first letter seems to be  automatically capitaliazed by our test http-server, so
+    // compare accordingly.
+    if (key == opentelemetry::trace::propagation::kTraceParent)
+    {
+      key_to_compare = "Traceparent";
+    }
+    else if (key == opentelemetry::trace::propagation::kTraceState)
+    {
+      key_to_compare = "Tracestate";
+    }
+    auto it = headers_.find(key_to_compare);
+    if (it != headers_.end())
+    {
+      return it->second;
+    }
+    return "";
+  }
+
+  virtual void Set(opentelemetry::nostd::string_view key,
+                   opentelemetry::nostd::string_view value) noexcept override
+  {
+    headers_.insert(std::pair<std::string, std::string>(std::string(key), std::string(value)));
+  }
+
+  T headers_;
+};
 
 void setUpTracer(bool inCompose, const std::string& serviceName)
 {    
@@ -44,6 +86,9 @@ void setUpTracer(bool inCompose, const std::string& serviceName)
     // auto provider = nostd::shared_ptr<opentelemetry::trace::TracerProvider>(new trace_sdk::TracerProvider(std::move(processor)));
     // Set the global trace provider
     opentelemetry::trace::Provider::SetTracerProvider(provider);
+
+    // Set global propagator
+    opentelemetry::context::propagation::GlobalTextMapPropagator::SetGlobalPropagator(nostd::shared_ptr<opentelemetry::context::propagation::TextMapPropagator>(new opentelemetry::trace::propagation::HttpTraceContext()));
 }
 
 opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer> getTracer(const std::string& serviceName)
