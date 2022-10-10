@@ -11,70 +11,69 @@ using namespace Rest;
 
 using namespace opentelemetry::trace;
 namespace http_client = opentelemetry::ext::http::client;
-namespace context     = opentelemetry::context;
+namespace context = opentelemetry::context;
 
 class Service
 {
-  private:
-    Router router;
-    std::shared_ptr<Http::Endpoint> httpEndpoint;
-    
-    Address address;      
+private:
+  Router router;
+  std::shared_ptr<Http::Endpoint> httpEndpoint;
 
-    const std::string serviceName = "service-b";
+  Address address;
 
-    void setupRoutes()
-    {
-        Routes::Get(router, "/ping", Routes::bind(&Service::ping, this));        
-    }
+  const std::string serviceName = "service-b";
 
-    void initEndpoint()
-    {
-      auto opts = Http::Endpoint::options().threads(4); 
-      httpEndpoint->init(opts);
-    }   
+  void setupRoutes()
+  {
+    Routes::Get(router, "/ping", Routes::bind(&Service::ping, this));
+  }
 
-  public:
-    explicit Service(Address address)       
-    {        
-      this->address = address;
-      httpEndpoint = std::make_shared<Http::Endpoint>(address);
-    }
+  void initEndpoint()
+  {
+    auto opts = Http::Endpoint::options().threads(4);
+    httpEndpoint->init(opts);
+  }
 
-    void initAndStart()
-    {
-        initEndpoint();
-        setupRoutes();
+public:
+  explicit Service(Address address)
+  {
+    this->address = address;
+    httpEndpoint = std::make_shared<Http::Endpoint>(address);
+  }
 
-        // true for docker-compose, false for local
-        // setUpTracer(true);
-        setUpTracer(false, serviceName);
+  void initAndStart()
+  {
+    initEndpoint();
+    setupRoutes();
 
-        std::cout << "Listening at: " << address.host() << 
-          ":" << address.port().toString() << std::endl;
+    // true for docker-compose, false for local
+    // setUpTracer(true);
+    setUpTracer(false, serviceName);
 
-        httpEndpoint->setHandler(router.handler());
-        httpEndpoint->serve();        
-    }    
+    std::cout << "Listening at: " << address.host() << ":" << address.port().toString() << std::endl;
 
-    void ping(const Rest::Request& request, Http::ResponseWriter writer)
-    {
-      std::cout << "\n---=== " << serviceName << "===---\n";
+    httpEndpoint->setHandler(router.handler());
+    httpEndpoint->serve();
+  }
 
-      StartSpanOptions options;
-      options.kind = SpanKind::kServer;
-      request.headers();
+  void ping(const Rest::Request &request, Http::ResponseWriter writer)
+  {
+    std::cout << "\n---=== " << serviceName << "===---\n";
 
-      // extract context from http header
-      HttpTextMapCarrier<http_client::Headers> carrier;
-      auto prop        = context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
-      auto current_ctx = context::RuntimeContext::GetCurrent();
-      auto new_context = prop->Extract(carrier, current_ctx);
-      options.parent   = GetSpan(new_context)->GetContext();
+    StartSpanOptions options;
+    options.kind = SpanKind::kServer;
+    request.headers();
 
-      // trace(serviceName, serviceName + ": received ping");
-      auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": received ping", options));
-      
-      writer.send(Http::Code::Ok, "Hello from " + serviceName);
-    }    
+    // extract context from http header
+    HttpTextMapCarrier<http_client::Headers> carrier;
+    auto prop = context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+    auto current_ctx = context::RuntimeContext::GetCurrent();
+    auto new_context = prop->Extract(carrier, current_ctx);
+    options.parent = GetSpan(new_context)->GetContext();
+
+    // trace(serviceName, serviceName + ": received ping");
+    auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan(serviceName + ": received ping", options));
+
+    writer.send(Http::Code::Ok, "Hello from " + serviceName);
+  }
 };
