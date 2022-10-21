@@ -55,7 +55,9 @@ public:
 
 void setUpTracer(bool inCompose, const std::string &serviceName)
 {
-  // opts.server_addr = inCompose ? "jaeger" : "localhost";
+  if (inCompose) {
+    opts.endpoint = "172.16.238.12";
+  }
 
   // Create Jaeger exporter instance
   auto exporter = std::unique_ptr<trace_sdk::SpanExporter>(new jaeger::JaegerExporter(opts));

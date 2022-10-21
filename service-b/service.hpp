@@ -1,3 +1,7 @@
+#ifndef DOCKER_COMPOSE
+#define DOCKER_COMPOSE 1
+#endif
+
 #include <pistache/endpoint.h>
 #include <pistache/router.h>
 #include <pistache/http.h>
@@ -47,8 +51,7 @@ public:
     setupRoutes();
 
     // true for docker-compose, false for local
-    // setUpTracer(true);
-    setUpTracer(false, serviceName);
+    setUpTracer(DOCKER_COMPOSE, serviceName);
 
     std::cout << "Listening at: " << address.host() << ":" << address.port().toString() << std::endl;
 

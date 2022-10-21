@@ -1,3 +1,7 @@
+#ifndef DOCKER_COMPOSE
+#define DOCKER_COMPOSE 1
+#endif
+
 #include <pistache/endpoint.h>
 #include <pistache/router.h>
 #include <pistache/http.h>
@@ -128,8 +132,7 @@ public:
     initHttpClient();
 
     // true for docker-compose, false for local
-    // setUpTracer(true);
-    setUpTracer(false, serviceName);
+    setUpTracer(DOCKER_COMPOSE, serviceName);
 
     std::cout << "Listening at: " << address.host() << ":" << address.port().toString() << std::endl;
 
@@ -143,8 +146,13 @@ public:
 
     auto scoped_span = opentelemetry::trace::Scope(getTracer(serviceName)->StartSpan("ping"));
 
-    // sendPingToAnotherService("http://0.0.0.0:8082/ping", "service-b");
-    sendPingToAnotherServiceProp2("http://0.0.0.0:8082/ping", "service-b");
+    if (DOCKER_COMPOSE){
+      // sendPingToAnotherService("http://0.0.0.0:8082/ping", "service-b");
+      sendPingToAnotherServiceProp2("http://172.16.238.11:8082/ping", "service-b");
+    } else {
+      // sendPingToAnotherService("http://0.0.0.0:8082/ping", "service-b");
+      sendPingToAnotherServiceProp2("http://0.0.0.0:8082/ping", "service-b");
+    }
 
     writer.send(Http::Code::Ok, "Hello from " + serviceName);
   }

@@ -11,6 +11,9 @@
   serviceB.initAndStart();
   }
 */
+#ifndef DOCKER_COMPOSE
+#define DOCKER_COMPOSE 1
+#endif
 
 #include "../common/tracer.hpp"
 #include "opentelemetry/ext/http/server/http_server.h"
@@ -152,7 +155,7 @@ int main(int argc, char *argv[])
   RequestHandler req_handler;
   http_server.AddHandler("/ping", &req_handler);
 
-  setUpTracer(false, serviceName);
+  setUpTracer(DOCKER_COMPOSE, serviceName);
 
   std::cout << "Listening at: " << server_name << ":" << server_port << std::endl;
 
