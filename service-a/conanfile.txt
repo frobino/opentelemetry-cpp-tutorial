@@ -1,7 +1,6 @@
 [requires]
 opentelemetry-cpp/1.2.0
 pistache/cci.20201127
-grpc/1.43.0
 
 [generators]
 cmake
