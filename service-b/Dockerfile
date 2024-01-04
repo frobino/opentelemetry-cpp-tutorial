@@ -1,9 +1,4 @@
-FROM debian:stable
-
-# add non-free repos
-RUN sed -i "s#deb http://deb.debian.org/debian buster main#deb http://deb.debian.org/debian testing main contrib non-free#g" /etc/apt/sources.list
-RUN sed -i "s#deb http://security.debian.org/debian-security buster/updates main##g" /etc/apt/sources.list
-RUN sed -i "s#deb http://deb.debian.org/debian buster-updates main#deb http://deb.debian.org/debian testing-updates main contrib non-free#g" /etc/apt/sources.list
+FROM debian:bullseye as build
 
 RUN apt-get update --allow-releaseinfo-change && apt-get install -y \
     git \
@@ -12,7 +7,7 @@ RUN apt-get update --allow-releaseinfo-change && apt-get install -y \
     python3 \
     cmake
 
-RUN pip install conan
+RUN pip install conan==1.62.0
 RUN conan profile new default --detect
 RUN conan profile update settings.compiler.libcxx=libstdc++11 default
 
@@ -29,7 +24,7 @@ COPY ./common ./common
 # Build the service
 WORKDIR /usr/src/service-b/
 RUN chmod -R 777 /usr/src/service-b/
-RUN mkdir build
+RUN rm -rf build && mkdir build
 RUN ls
 RUN ls ..
 RUN cd build && \
@@ -38,5 +33,9 @@ RUN cd build && \
     cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-finstrument-functions" -DCMAKE_CXX_FLAGS="-finstrument-functions" && \
     cmake --build .
 
+FROM debian:bullseye
+
+COPY --from=build /usr/src/service-b/build/bin/serviceB /app/serviceB
+
 # Start the service
-CMD ["./build/bin/serviceB"]
+CMD ["/app/serviceB"]
