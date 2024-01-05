@@ -3,7 +3,7 @@
 Inspired from this [blog](https://logz.io/blog/cplusplus-opentelemetry-tracing/#start),
 and this [otel.logz.io](https://github.com/dawidborycki/otel.logz.io) project.
 
-## How to:
+## How to (local):
 
 For each service (i.e. service-a and service-b), build:
 
@@ -43,4 +43,23 @@ lttng add-context -c u -u -t vpid -t vtid
 lttng start
 LD_PRELOAD="liblttng-ust-cyg-profile.so liblttng-ust-libc-wrapper.so" ./service-b
 lttng destroy
+```
+
+## How to (Docker):
+
+From the root folder of this repo:
+
+```bash
+# 1. build the images, newtworks etc
+docker-compose build
+# 2. create the containers
+docker compose create
+# 3. start the containers
+docker compose start
+# 4. open jaeger at http://localhost:16686/
+# 5. curl the service A, which will trigger service B
+curl 0.0.0.0:8081/ping
+# 6. look for the trace in jaeger
+# 7. stop the containers
+docker compose stop
 ```
